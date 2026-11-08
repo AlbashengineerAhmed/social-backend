@@ -1,7 +1,7 @@
 {
   "name": "socialapp",
   "version": "1.0.0",
-  "description": "Social Media App backend built during Route Cycle 43 with Mahmoud Elwan",
+  "description": "Enterprise Social Media App Backend API with real-time Socket.io and Cloudinary media engine",
   "main": "index.js",
   "type": "module",
   "engines": {

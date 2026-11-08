@@ -1,7 +1,5 @@
 # 🌐 SocialApp — Enterprise Social Media Backend API
 
-> **Node.js Route — Cycle 43**  
-> **Instructor:** Eng. Mahmoud Elwan  
 > **Architecture:** Clean Layered Architecture (`Controller` ➔ `Service` ➔ `DB Service`)  
 > **Format:** ECMAScript Modules (`"type": "module"`)  
 > **Deployment Target:** Vercel Serverless / Render / Railway  
