@@ -1,221 +1,238 @@
-## 📖 Overview
+# 🌐 SocialApp — Backend API & Real-time Server
 
-**SocialApp** is a scalable, enterprise-grade RESTful API built with **Node.js**, **Express.js**, and **MongoDB (Mongoose)**. The application implements core social networking capabilities including secure user authentication (email OTP verification and Google OAuth2), user profile management, paginated posts with Cloudinary multi-asset uploads, threaded comments and replies, atomic post likes, and soft-delete/restore mechanics.
-
-Every file in the codebase is fully documented with strict **JSDoc** standards and validated with schema-driven validation (**Joi**) and centralized error handling.
+A production-ready, feature-rich social media backend built with **Node.js**, **Express.js (ES Modules)**, **MongoDB (Mongoose)**, and **Socket.IO**. Designed for high performance, real-time engagement, and seamless deployment on **Vercel**, **Render**, or **Railway**.
 
 ---
 
-## 📁 Project Structure
+## 🚀 Key Highlights & Capabilities
+
+- 🔐 **Authentication & Security**: Email verification via OTP (Nodemailer HTML templates), JWT access & refresh tokens with credential invalidation timestamps, Google OAuth2 integration (`google-auth-library`), Bcrypt hashing, Helmet HTTP security headers, and Express rate limiting.
+- 📱 **Facebook & Instagram Stories (24h TTL)**:
+  - 40-second smooth story progression with auto-advance to next user/story.
+  - Text stories with gradient backgrounds & draggable captions.
+  - Media stories with Cloudinary image/video delivery.
+  - Draggable overlays: Facebook-style music stickers, user mentions, and location pins.
+  - Real-time viewers tracking (`viewStory`), view counts, and emoji quick reactions.
+- 🎵 **Integrated Music Engine & 40s Waveform Trimmer**:
+  - Curated local soundtracks & online royalty-free library.
+  - Interactive audio trimming window (40s clips) with waveform visualization.
+  - Draggable music stickers with live equalizer bars.
+- 💬 **Real-time Chat (Socket.IO)**:
+  - 1-on-1 private messaging and group discussions.
+  - Instant socket events for new messages, typing indicators, and read receipts.
+- 📰 **Feed, Posts & Threaded Comments**:
+  - Paginated newsfeed with customizable visibility (Public, Friends, Private).
+  - Multi-reaction engine (Like, Love, Care, Haha, Wow, Sad, Angry).
+  - Multi-level nested comments & replies with freeze/unfreeze controls.
+  - Post feelings, location tagging, and background cards.
+- 👥 **Communities & Groups**:
+  - Public & private groups with membership requests and approvals.
+  - Role-based permissions (Admin, Moderator, Member) and group post feeds.
+- 📅 **Events Scheduling & RSVP**:
+  - Event creation, location/date scheduling, and guest tracking (Going, Interested).
+- 🔔 **Notification Center**:
+  - Automated real-time notifications for likes, comments, mentions, friendships, and replies.
+- 🎫 **Support Desk & Moderation**:
+  - User support ticketing system with priority escalation (Low, Medium, High, Urgent).
+  - Comprehensive Admin portal for user banning, content moderation, and report resolution.
+- ☁️ **Cloudinary Media Pipeline**:
+  - Multer memory storage and streaming uploads for photos, videos, and avatars.
+
+---
+
+## 📁 System Architecture
 
 ```text
-SocialApp/
-├── index.js                               # Application entrypoint & HTTP server bootstrap
-├── package.json                           # Project dependencies, scripts & ES module configuration
-├── package-lock.json                      # Locked dependency tree
-├── README.md                              # Comprehensive project documentation
+social-backend/
+├── index.js                               # Application entrypoint & HTTP + Socket.IO server bootstrap
+├── package.json                           # Dependencies, engines (>=18.0.0), and start scripts
+├── vercel.json                            # Vercel serverless deployment routing config
+├── .env.example                           # Template environment variables
+├── .gitignore                             # Ignored files (node_modules, .env.dev, uploads)
 └── src/
-    ├── app.controller.js                  # Express middleware pipeline, route aggregator & error handlers
+    ├── app.controller.js                  # Middleware chain, route aggregator & global error handlers
+    ├── socket.js                          # Socket.IO connection manager & real-time events
     ├── config/
-    │   └── .env.dev                       # Development environment variables
+    │   └── .env.dev                       # Development environment variables (git-ignored)
     ├── DB/
-    │   ├── connection.js                  # MongoDB Mongoose connection manager
+    │   ├── connection.js                  # MongoDB Atlas connection manager
     │   ├── db.service.js                  # Generic database query abstraction layer
-    │   └── model/
-    │       ├── User.model.js              # User schema, enums (roles, providers), indexes & hooks
-    │       ├── Post.model.js              # Post schema with virtual 'comments' populate
-    │       └── Comment.model.js           # Comment & reply schema with virtual 'reply' populate
+    │   └── model/                         # Mongoose data models
+    │       ├── User.model.js              # Profiles, roles, providers, followers & blocking
+    │       ├── Post.model.js              # Posts, attachments, reactions & comment virtuals
+    │       ├── Comment.model.js           # Multi-tier comments and nested replies
+    │       ├── Story.model.js             # 24h stories with music, stickers, coordinates & TTL
+    │       ├── StoryView.model.js         # Story viewers log & reactions
+    │       ├── Conversation.model.js      # Chat conversation rooms
+    │       ├── Message.model.js           # Real-time chat messages & media
+    │       ├── Group.model.js             # Community groups & settings
+    │       ├── GroupMember.model.js       # Group members & RBAC
+    │       ├── GroupRequest.model.js      # Join group approval queue
+    │       ├── Event.model.js             # Scheduled events
+    │       ├── EventAttendee.model.js     # Event RSVPs
+    │       ├── Notification.model.js      # User notifications
+    │       ├── SupportTicket.model.js     # Helpdesk tickets & resolution
+    │       └── Report.model.js            # Content reports & moderation flags
     ├── middleware/
-    │   ├── auth.middleware.js             # JWT authentication & role-based authorization guards
-    │   └── validation.middleware.js       # Joi request payload & file validation middleware
-    ├── modules/
-    │   ├── auth/                          # Authentication Module
-    │   │   ├── auth.controller.js         # Auth routing endpoints
-    │   │   ├── auth.validation.js         # Joi validation schemas (signup, login, verify OTP)
-    │   │   └── service/
-    │   │       ├── registration.service.js# Signup, OTP generation & email dispatch
-    │   │       └── login.service.js       # Credential login & Google OAuth2 integration
-    │   ├── user/                          # User Profile Module
-    │   │   ├── user.controller.js         # User profile & credentials routes
-    │   │   ├── user.authorization.js      # Role-based access rules for user operations
-    │   │   ├── user.validation.js         # Joi validation schemas (profile update, password)
-    │   │   └── service/
-    │   │       └── user.service.js        # User retrieval, profile update, avatar upload & deletion
-    │   ├── post/                          # Post & Feed Module
-    │   │   ├── post.controller.js         # Post CRUD, like toggle & nested comment router mounting
-    │   │   ├── post.authorization.js      # Role permissions for post actions
-    │   │   ├── post.validation.js         # Joi validation schemas for posts
-    │   │   └── service/
-    │   │       └── post.service.js        # Feed pagination, Cloudinary upload, edit, like/unlike
-    │   └── comment/                       # Comment & Reply Module
-    │       ├── comment.controller.js      # Nested comment/reply routes (mergeParams: true)
-    │       ├── comment.authorization.js   # Multi-tier access control (author, post owner, admin)
-    │       ├── comment.validation.js      # Joi validation schemas for comments
-    │       └── service/
-    │           └── comment.service.js     # Comment creation, reply nesting, multi-role freeze
+    │   ├── auth.middleware.js             # JWT authentication & RBAC guards
+    │   └── validation.middleware.js       # Joi request payload & file validation
+    ├── modules/                           # Feature domain modules (Controller, Service, Validation)
+    │   ├── auth/                          # Signup, OTP verification, Login, Google OAuth
+    │   ├── user/                          # User profile, avatar/cover upload, search, block
+    │   ├── post/                          # Feed, post CRUD, reactions, feelings, location
+    │   ├── comment/                       # Threaded comments, replies, reaction toggle
+    │   ├── story/                         # Stories lifecycle, 40s duration, stickers, viewers
+    │   ├── music/                         # Music library, metadata, stream proxy
+    │   ├── chat/                          # Messaging API, conversations list, message history
+    │   ├── group/                         # Group management, membership workflows
+    │   ├── event/                         # Event creation, attendee RSVP
+    │   ├── notification/                  # Notification fetching & read status
+    │   ├── support/                       # Support tickets & admin response flow
+    │   └── admin/                         # Admin analytics, user banning, reports management
     └── utils/
-        ├── pagination.js                  # Generic pagination helper with skip/limit calculation
-        ├── email/
-        │   ├── send.email.js              # Nodemailer SMTP transport service
-        │   └── template/
-        │       └── verifyAccount.template.js # Responsive HTML email template for OTP confirmation
-        ├── events/
-        │   └── email.event.js             # Node.js EventEmitter for non-blocking email processing
-        ├── multer/
-        │   ├── cloud.multer.js            # Multer memory storage & file type validation filters
-        │   ├── cloudinary.multer.js       # Cloudinary v2 SDK configuration & client instance
-        │   └── local.multer.js            # Disk storage fallback configuration
-        ├── response/
-        │   ├── error.response.js          # Centralized asyncHandler & custom GlobalErrorHandler
-        │   └── success.response.js        # Standardized JSON success response utility
-        └── security/
-            ├── hash.security.js           # Bcrypt password hashing & comparison helpers
-            └── token.security.js          # JWT sign, verify, token generation & encryption
+        ├── pagination.js                  # Cursor & page/limit pagination helper
+        ├── email/                         # Nodemailer SMTP transporter & HTML templates
+        ├── events/                        # EventEmitters for async non-blocking operations
+        ├── multer/                        # Cloudinary stream uploader & disk storage
+        ├── response/                      # Standardized success responses & asyncHandler
+        └── security/                      # Bcrypt hashing & JWT encryption utilities
 ```
 
 ---
 
-## 🧩 Reconstructed Modules Breakdown
+## 🔄 Core Application Flows & API Endpoints
 
-### 1. Database Layer (`src/DB/`)
-- **`connection.js`**: Robust Mongoose connection wrapper connecting to MongoDB with connection event listeners.
-- **`db.service.js`**: Reusable generic database adapter encapsulating operations (`find`, `findOne`, `create`, `findOneAndUpdate`, `findByIdAndUpdate`, `deleteOne`, etc.) to isolate Mongoose specifics from service business logic.
-- **`model/User.model.js`**: Defines the user schema with pre-save password hashing, custom role types (`User`, `Admin`), provider types (`System`, `Google`), and indexes.
-- **`model/Post.model.js`**: Schema for user posts with attachments array, likes array, and a virtual populate (`comments`) linking top-level comments to the post.
-- **`model/Comment.model.js`**: Threaded comment schema supporting parent-child self-referential relations via `commentId` and virtual populate (`reply`).
+### 1. Authentication Flow
+```text
+[User Signup] ──> [Hash Password] ──> [Save User (Unconfirmed)] ──> [Emit Email Event] ──> [Send 6-Digit OTP]
+[Submit OTP]  ──> [Verify OTP & Expiration] ──> [Activate Account] ──> [Issue Access & Refresh Tokens]
+```
+- `POST /auth/signup` — Register a new account & receive OTP.
+- `PATCH /auth/confirm-email` — Confirm email with 6-digit OTP code.
+- `POST /auth/login` — Sign in with email & password.
+- `POST /auth/google-login` — Sign in with Google ID token credential.
+- `POST /auth/refresh-token` — Rotate access token using valid refresh token.
+- `PATCH /auth/forget-password` & `PATCH /auth/reset-password` — Password recovery flow.
 
-### 2. Authentication & Authorization (`src/middleware/`, `src/modules/auth/`)
-- **`auth.middleware.js`**:
-  - `authentication()`: Validates incoming Bearer JWT tokens, verifies user existence, checks password update timestamps against token issuance (`changeCredentialsTime`), and injects `req.user`.
-  - `authorization(roles)`: Role-based access control (RBAC) ensuring only authorized user roles access restricted routes.
-- **`registration.service.js`**:
-  - Validates duplicate emails.
-  - Generates numerical confirmation OTP codes.
-  - Fires an asynchronous `sendEmail` event via `email.event.js` to dispatch responsive verification emails non-blockingly.
-  - Confirms email OTP to activate accounts.
-- **`login.service.js`**:
-  - Validates user credentials with Bcrypt.
-  - Generates access & refresh tokens via `token.security.js`.
-  - Native Google OAuth2 token verification (`google-auth-library`) for seamless social sign-in.
+### 2. Story Flow (Facebook / Instagram Style)
+```text
+[Create Story] ──> [Upload Media or Select Gradient] ──> [Pick Music & Trim 40s] ──> [Place Draggable Overlays] ──> [Publish (24h TTL)]
+[Viewer Opens] ──> [Track View & Timestamp] ──> [Progress Bar 0-100% over 40s] ──> [Send Quick Emoji Reaction] ──> [Auto-Advance Next Story]
+```
+- `POST /story` — Publish text or media story with music details (`x`, `y`, `startTime`, `duration: 40`), stickers, and text position.
+- `GET /story/feed` — Grouped active stories by followed users and own profile.
+- `POST /story/:storyId/view` — Record viewer presence & timestamp.
+- `GET /story/:storyId/viewers` — Fetch viewers list with reactions (Story creator only).
+- `POST /story/:storyId/react` — Send quick emoji reaction (`❤️`, `🔥`, `👏`, `😂`, `😮`, `😢`).
+- `DELETE /story/:storyId` — Delete story permanently.
 
-### 3. User Management (`src/modules/user/`)
-- **`user.service.js`**:
-  - `getProfile`: Retrieves the authenticated user's profile with populated fields.
-  - `updateProfile`: Updates personal details with validation.
-  - `updatePassword`: Verifies old password and securely hashes the new one.
-  - `updateProfileImage`: Streams avatar image to Cloudinary and stores secure CDN URLs.
-  - `freezeAccount` / `unfreezeAccount`: Soft deletion and reactivation mechanics.
+### 3. Posts & Feed Flow
+```text
+[Author Posts] ──> [Upload Media to Cloudinary] ──> [Attach Feelings/Location] ──> [Broadcast to Followers]
+[Users Interact] ──> [Toggle Reaction (Like, Love...)] ──> [Add Threaded Comment/Reply] ──> [Notify Author]
+```
+- `GET /post` — Paginated home feed.
+- `POST /post` — Create post with text, images/videos, gradient card, location, or feelings.
+- `PATCH /post/:postId` — Edit existing post.
+- `PATCH /post/:postId/reaction` — Toggle reaction emoji.
+- `POST /post/:postId/comment` — Add top-level comment.
+- `POST /post/:postId/comment/:commentId/reply` — Post nested reply.
 
-### 4. Post & Feed Management (`src/modules/post/`)
-- **`post.service.js`**:
-  - `getPosts`: Newsfeed retrieval with customized pagination (`paginate` helper), deep population of author info, top-level comments, and nested replies.
-  - `createPost`: Publishes posts with optional multi-file image attachments uploaded to Cloudinary.
-  - `updatePost`: Enables post authors to modify text and update attachments.
-  - `freezePost` / `unfreezePost`: Allows post owners to soft-delete and restore posts.
-  - `likePost`: Handles like/unlike reactions using atomic MongoDB `$addToSet` and `$pull` operators.
-
-### 5. Nested Comments & Replies (`src/modules/comment/`)
-- **`comment.controller.js`**: Configured with `mergeParams: true` and mounted under `/post/:postId/comment` to handle nested URL hierarchies seamlessly.
-- **`comment.service.js`**:
-  - `createComment`: Supports creating both direct post comments and nested replies to existing comments (`/:commentId/reply`).
-  - `updateComment`: Ownership-protected editing of comment content and attachments.
-  - `freezeComment` / `unFreezeComment`: Multi-tier authorization logic allowing:
-    1. The comment's author.
-    2. The original post's author.
-    3. System administrators (`role: Admin`).
-
-### 6. Utilities & Cross-Cutting Concerns (`src/utils/`)
-- **Centralized Error Handling**: `asyncHandler` wraps asynchronous controllers to catch rejections, forwarding them to `globalErrorHandling` in `app.controller.js`.
-- **Standardized Responses**: `successResponse` formats all successful payloads uniformly (`{ message, status, data }`).
-- **File Uploads**: `cloud.multer.js` filters permitted MIME types (e.g., images, PDFs) with memory buffering; `cloudinary.multer.js` handles cloud asset storage.
-- **Pagination Utility**: `pagination.js` computes offsets, limits, and total pages dynamically.
-- **Event-Driven Emails**: `email.event.js` decouples email sending from the request-response lifecycle for instant response times.
-
----
-
-## 📡 API Endpoints Reference
-
-### Authentication (`/auth`)
-| Method | Endpoint | Description | Access |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/auth/signup` | Register a new user and send verification OTP | Public |
-| `PATCH` | `/auth/verify-account` | Verify email OTP code to activate account | Public |
-| `POST` | `/auth/login` | Authenticate with email & password | Public |
-| `POST` | `/auth/login-with-google` | Authenticate using Google OAuth token | Public |
-
-### User Profile (`/user`)
-| Method | Endpoint | Description | Access |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/user/profile` | Retrieve authenticated user's profile | Private (User, Admin) |
-| `PATCH` | `/user/profile` | Update profile details | Private (User, Admin) |
-| `PATCH` | `/user/update-password` | Change account password | Private (User, Admin) |
-| `PATCH` | `/user/profile-image` | Upload/update profile image via Cloudinary | Private (User, Admin) |
-| `PATCH` | `/user/freeze-account` | Soft-delete / deactivate account | Private (User, Admin) |
-
-### Posts (`/post`)
-| Method | Endpoint | Description | Access |
-| :--- | :--- | :--- | :--- |
-| `GET` | `/post?page=1&size=5` | Get paginated posts with comments & replies | Public |
-| `POST` | `/post` | Create a new post (text and/or attachments) | Private (User, Admin) |
-| `PATCH` | `/post/:postId` | Update post content/attachments | Private (Author) |
-| `PATCH` | `/post/:postId/freeze` | Soft-delete post | Private (Author) |
-| `PATCH` | `/post/:postId/un-freeze`| Restore soft-deleted post | Private (Author) |
-| `PATCH` | `/post/:postId/like?action=like` | Toggle like/unlike on a post | Private (User, Admin) |
-
-### Comments & Replies (`/post/:postId/comment`)
-| Method | Endpoint | Description | Access |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/post/:postId/comment` | Add top-level comment to post | Private (User, Admin) |
-| `POST` | `/post/:postId/comment/:commentId/reply` | Reply to an existing comment | Private (User, Admin) |
-| `PATCH` | `/post/:postId/comment/:commentId` | Update comment text/attachments | Private (Author) |
-| `PATCH` | `/post/:postId/comment/:commentId/freeze` | Soft-delete comment | Author, Post Owner, Admin |
-| `PATCH` | `/post/:postId/comment/:commentId/un-freeze` | Restore frozen comment | Author, Post Owner, Admin |
+### 4. Real-time Messaging Flow
+```text
+[Client Connects (Socket.IO)] ──> [Authenticate JWT Handshake] ──> [Join Personal Room (userId)]
+[Send Message] ──> [Save to MongoDB] ──> [io.to(receiverId).emit('newMessage')] ──> [Live UI Bubble Update]
+```
+- `GET /chat/conversations` — Fetch user's conversation threads with last message & unread badge.
+- `GET /chat/messages/:recipientId` — Fetch chat message history.
+- `POST /chat/messages` — Send message with optional media attachment.
 
 ---
 
 ## ⚙️ Environment Configuration
 
-Create a `.env.dev` configuration file in `SocialApp/src/config/`:
+Create a `.env` or use `src/config/.env.dev` with the following variables:
 
 ```env
-# Application Settings
-PORT=3000
-APP_NAME=SocialApp
-MODE=DEV
+PORT=3001
+DB_URI="mongodb+srv://<username>:<password>@cluster0.mongodb.net/SocialMediaApp"
+SALT=10
+ENCRYPTION_KEY="socialmediaapplication"
 
-# Database
-DB_URI=mongodb://127.0.0.1:27017/social_app
+# JWT Signatures
+TOKEN_SIGNATURE="SocialAppUserTokenSignature"
+TOKEN_SIGNATURE_ADMIN="SocialAppAdminTokenSignature"
+EMAIL_TOKEN_SIGNATURE="SocialAppEmailTokenSignature"
 
-# Security & JWT Secrets
-SALT_ROUND=10
-USER_TOKEN_SIGNATURE=customUserSecretKey
-ADMIN_TOKEN_SIGNATURE=customAdminSecretKey
-USER_REFRESH_TOKEN_SIGNATURE=customUserRefreshSecretKey
-ADMIN_REFRESH_TOKEN_SIGNATURE=customAdminRefreshSecretKey
-BEARER_KEY=Bearer
+USER_ACCESS_TOKEN="SocialAppUserTokenSignature"
+ADMIN_ACCESS_TOKEN="SocialAppAdminTokenSignature"
+USER_REFRESH_TOKEN="SocialAppUserRefreshTokenSignature"
+ADMIN_REFRESH_TOKEN="SocialAppAdminRefreshTokenSignature"
+EXPIRESIN=1800
 
-# Cloudinary CDN
-CLOUD_NAME=your_cloudinary_name
-API_KEY=your_cloudinary_api_key
-API_SECRET=your_cloudinary_api_secret
+# Email SMTP
+EMAIL="your-email@gmail.com"
+EMAIL_PASSWORD="your-app-password"
 
-# Nodemailer / SMTP
-EMAIL=your_email@gmail.com
-EMAIL_PASSWORD=your_email_app_password
+# Frontend Host & Metadata
+FE_URL="http://localhost:5173"
+APP_NAME="Social Media App"
+MOOD="DEV"
 
-# Google OAuth
-CLIENT_ID=your_google_client_id.apps.googleusercontent.com
+# Cloudinary Storage
+cloud_name="your_cloud_name"
+api_key="your_api_key"
+api_secret="your_api_secret"
 ```
 
 ---
 
-## 🛠️ Verification & Build Check
+## 🛠️ Local Development Setup
 
-To verify all modules syntax without starting the server, run:
+1. **Install dependencies**:
+   ```bash
+   cd social-backend
+   npm install
+   ```
 
-```powershell
-Get-ChildItem -Path "./SocialApp" -Filter "*.js" -Recurse | Where-Object { $_.FullName -notmatch "node_modules" } | ForEach-Object {
-    node -c $_.FullName
+2. **Start the development server with file watch**:
+   ```bash
+   npm run dev
+   ```
+
+3. **Start the production server**:
+   ```bash
+   npm start
+   ```
+
+4. **Seed initial SuperAdmin**:
+   ```bash
+   npm run create:admin
+   ```
+
+---
+
+## 🚀 Deployment (Vercel / Cloud Platforms)
+
+The repository includes a ready-to-use [`vercel.json`](./vercel.json) configured with the `@vercel/node` builder:
+
+```json
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "./index.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/"
+    }
+  ]
 }
 ```
-*All 36 files pass with 0 syntax errors.*
+
+- When deploying to **Vercel**, import the `social-backend` repository and set the environment variables in the Vercel Project Settings.
+- For persistent real-time WebSockets (Socket.IO), platforms like **Render**, **Railway**, or **VPS** will keep persistent connections active via `server.listen(process.env.PORT)`.
