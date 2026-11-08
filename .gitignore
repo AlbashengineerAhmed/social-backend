@@ -1,0 +1,10 @@
+node_modules
+src/config/.env.dev
+.env
+.env.*
+!.env.example
+uploads
+*.log
+.DS_Store
+check-db.js
+test_integration.js
