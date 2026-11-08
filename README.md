@@ -1,220 +1,205 @@
-# 🌐 SocialApp — Backend API & Real-time Server
+# 🌐 SocialApp — Enterprise Social Media Backend API
 
-A production-ready, feature-rich social media backend built with **Node.js**, **Express.js (ES Modules)**, **MongoDB (Mongoose)**, and **Socket.IO**. Designed for high performance, real-time engagement, and seamless deployment on **Vercel**, **Render**, or **Railway**.
-
----
-
-## 🚀 Key Highlights & Capabilities
-
-- 🔐 **Authentication & Security**: Email verification via OTP (Nodemailer HTML templates), JWT access & refresh tokens with credential invalidation timestamps, Google OAuth2 integration (`google-auth-library`), Bcrypt hashing, Helmet HTTP security headers, and Express rate limiting.
-- 📱 **Facebook & Instagram Stories (24h TTL)**:
-  - 40-second smooth story progression with auto-advance to next user/story.
-  - Text stories with gradient backgrounds & draggable captions.
-  - Media stories with Cloudinary image/video delivery.
-  - Draggable overlays: Facebook-style music stickers, user mentions, and location pins.
-  - Real-time viewers tracking (`viewStory`), view counts, and emoji quick reactions.
-- 🎵 **Integrated Music Engine & 40s Waveform Trimmer**:
-  - Curated local soundtracks & online royalty-free library.
-  - Interactive audio trimming window (40s clips) with waveform visualization.
-  - Draggable music stickers with live equalizer bars.
-- 💬 **Real-time Chat (Socket.IO)**:
-  - 1-on-1 private messaging and group discussions.
-  - Instant socket events for new messages, typing indicators, and read receipts.
-- 📰 **Feed, Posts & Threaded Comments**:
-  - Paginated newsfeed with customizable visibility (Public, Friends, Private).
-  - Multi-reaction engine (Like, Love, Care, Haha, Wow, Sad, Angry).
-  - Multi-level nested comments & replies with freeze/unfreeze controls.
-  - Post feelings, location tagging, and background cards.
-- 👥 **Communities & Groups**:
-  - Public & private groups with membership requests and approvals.
-  - Role-based permissions (Admin, Moderator, Member) and group post feeds.
-- 📅 **Events Scheduling & RSVP**:
-  - Event creation, location/date scheduling, and guest tracking (Going, Interested).
-- 🔔 **Notification Center**:
-  - Automated real-time notifications for likes, comments, mentions, friendships, and replies.
-- 🎫 **Support Desk & Moderation**:
-  - User support ticketing system with priority escalation (Low, Medium, High, Urgent).
-  - Comprehensive Admin portal for user banning, content moderation, and report resolution.
-- ☁️ **Cloudinary Media Pipeline**:
-  - Multer memory storage and streaming uploads for photos, videos, and avatars.
+> **Node.js Route — Cycle 43**  
+> **Instructor:** Eng. Mahmoud Elwan  
+> **Architecture:** Clean Layered Architecture (`Controller` ➔ `Service` ➔ `DB Service`)  
+> **Format:** ECMAScript Modules (`"type": "module"`)  
+> **Deployment Target:** Vercel Serverless / Render / Railway  
 
 ---
 
-## 📁 System Architecture
+## 📖 Executive Summary
 
-```text
-social-backend/
-├── index.js                               # Application entrypoint & HTTP + Socket.IO server bootstrap
-├── package.json                           # Dependencies, engines (>=18.0.0), and start scripts
-├── vercel.json                            # Vercel serverless deployment routing config
-├── .env.example                           # Template environment variables
-├── .gitignore                             # Ignored files (node_modules, .env.dev, uploads)
-└── src/
-    ├── app.controller.js                  # Middleware chain, route aggregator & global error handlers
-    ├── socket.js                          # Socket.IO connection manager & real-time events
-    ├── config/
-    │   └── .env.dev                       # Development environment variables (git-ignored)
-    ├── DB/
-    │   ├── connection.js                  # MongoDB Atlas connection manager
-    │   ├── db.service.js                  # Generic database query abstraction layer
-    │   └── model/                         # Mongoose data models
-    │       ├── User.model.js              # Profiles, roles, providers, followers & blocking
-    │       ├── Post.model.js              # Posts, attachments, reactions & comment virtuals
-    │       ├── Comment.model.js           # Multi-tier comments and nested replies
-    │       ├── Story.model.js             # 24h stories with music, stickers, coordinates & TTL
-    │       ├── StoryView.model.js         # Story viewers log & reactions
-    │       ├── Conversation.model.js      # Chat conversation rooms
-    │       ├── Message.model.js           # Real-time chat messages & media
-    │       ├── Group.model.js             # Community groups & settings
-    │       ├── GroupMember.model.js       # Group members & RBAC
-    │       ├── GroupRequest.model.js      # Join group approval queue
-    │       ├── Event.model.js             # Scheduled events
-    │       ├── EventAttendee.model.js     # Event RSVPs
-    │       ├── Notification.model.js      # User notifications
-    │       ├── SupportTicket.model.js     # Helpdesk tickets & resolution
-    │       └── Report.model.js            # Content reports & moderation flags
-    ├── middleware/
-    │   ├── auth.middleware.js             # JWT authentication & RBAC guards
-    │   └── validation.middleware.js       # Joi request payload & file validation
-    ├── modules/                           # Feature domain modules (Controller, Service, Validation)
-    │   ├── auth/                          # Signup, OTP verification, Login, Google OAuth
-    │   ├── user/                          # User profile, avatar/cover upload, search, block
-    │   ├── post/                          # Feed, post CRUD, reactions, feelings, location
-    │   ├── comment/                       # Threaded comments, replies, reaction toggle
-    │   ├── story/                         # Stories lifecycle, 40s duration, stickers, viewers
-    │   ├── music/                         # Music library, metadata, stream proxy
-    │   ├── chat/                          # Messaging API, conversations list, message history
-    │   ├── group/                         # Group management, membership workflows
-    │   ├── event/                         # Event creation, attendee RSVP
-    │   ├── notification/                  # Notification fetching & read status
-    │   ├── support/                       # Support tickets & admin response flow
-    │   └── admin/                         # Admin analytics, user banning, reports management
-    └── utils/
-        ├── pagination.js                  # Cursor & page/limit pagination helper
-        ├── email/                         # Nodemailer SMTP transporter & HTML templates
-        ├── events/                        # EventEmitters for async non-blocking operations
-        ├── multer/                        # Cloudinary stream uploader & disk storage
-        ├── response/                      # Standardized success responses & asyncHandler
-        └── security/                      # Bcrypt hashing & JWT encryption utilities
-```
+**SocialApp** is a scalable, enterprise-grade RESTful API and real-time messaging engine built with **Node.js**, **Express.js**, **MongoDB (Mongoose)**, and **Socket.IO**. The backend powers a comprehensive social networking platform featuring 24-hour disappearing stories with 40-second audio trimming, live chat messaging, rich newsfeed interactions, threaded comment hierarchies, community groups, event scheduling, and a full administrative moderation suite.
 
 ---
 
-## 🔄 Core Application Flows & API Endpoints
+## 🛠️ Technology Stack
 
-### 1. Authentication Flow
-```text
-[User Signup] ──> [Hash Password] ──> [Save User (Unconfirmed)] ──> [Emit Email Event] ──> [Send 6-Digit OTP]
-[Submit OTP]  ──> [Verify OTP & Expiration] ──> [Activate Account] ──> [Issue Access & Refresh Tokens]
-```
-- `POST /auth/signup` — Register a new account & receive OTP.
-- `PATCH /auth/confirm-email` — Confirm email with 6-digit OTP code.
-- `POST /auth/login` — Sign in with email & password.
-- `POST /auth/google-login` — Sign in with Google ID token credential.
-- `POST /auth/refresh-token` — Rotate access token using valid refresh token.
-- `PATCH /auth/forget-password` & `PATCH /auth/reset-password` — Password recovery flow.
-
-### 2. Story Flow (Facebook / Instagram Style)
-```text
-[Create Story] ──> [Upload Media or Select Gradient] ──> [Pick Music & Trim 40s] ──> [Place Draggable Overlays] ──> [Publish (24h TTL)]
-[Viewer Opens] ──> [Track View & Timestamp] ──> [Progress Bar 0-100% over 40s] ──> [Send Quick Emoji Reaction] ──> [Auto-Advance Next Story]
-```
-- `POST /story` — Publish text or media story with music details (`x`, `y`, `startTime`, `duration: 40`), stickers, and text position.
-- `GET /story/feed` — Grouped active stories by followed users and own profile.
-- `POST /story/:storyId/view` — Record viewer presence & timestamp.
-- `GET /story/:storyId/viewers` — Fetch viewers list with reactions (Story creator only).
-- `POST /story/:storyId/react` — Send quick emoji reaction (`❤️`, `🔥`, `👏`, `😂`, `😮`, `😢`).
-- `DELETE /story/:storyId` — Delete story permanently.
-
-### 3. Posts & Feed Flow
-```text
-[Author Posts] ──> [Upload Media to Cloudinary] ──> [Attach Feelings/Location] ──> [Broadcast to Followers]
-[Users Interact] ──> [Toggle Reaction (Like, Love...)] ──> [Add Threaded Comment/Reply] ──> [Notify Author]
-```
-- `GET /post` — Paginated home feed.
-- `POST /post` — Create post with text, images/videos, gradient card, location, or feelings.
-- `PATCH /post/:postId` — Edit existing post.
-- `PATCH /post/:postId/reaction` — Toggle reaction emoji.
-- `POST /post/:postId/comment` — Add top-level comment.
-- `POST /post/:postId/comment/:commentId/reply` — Post nested reply.
-
-### 4. Real-time Messaging Flow
-```text
-[Client Connects (Socket.IO)] ──> [Authenticate JWT Handshake] ──> [Join Personal Room (userId)]
-[Send Message] ──> [Save to MongoDB] ──> [io.to(receiverId).emit('newMessage')] ──> [Live UI Bubble Update]
-```
-- `GET /chat/conversations` — Fetch user's conversation threads with last message & unread badge.
-- `GET /chat/messages/:recipientId` — Fetch chat message history.
-- `POST /chat/messages` — Send message with optional media attachment.
+| Technology | Category | Purpose |
+| :--- | :--- | :--- |
+| **Node.js (>= 18.0.0)** | Runtime | High-throughput asynchronous JavaScript runtime engine |
+| **Express.js (v4.21)** | Web Framework | REST API routing, middleware chaining, and HTTP request pipeline |
+| **MongoDB & Mongoose (v8.7)**| Database & ODM | Document database with schema validation, virtuals, and TTL indexes |
+| **Socket.IO (v4.8)** | WebSockets | Bidirectional low-latency real-time chat & notifications |
+| **JSONWebToken (JWT)** | Security | Stateless access & refresh token authentication |
+| **Bcrypt (v5.1)** | Security | Secure password salting and one-way cryptographic hashing |
+| **Joi (v17.13)** | Validation | Strict schema validation for request payloads and queries |
+| **Cloudinary (v2.5)** | Cloud Storage | Secure cloud media storage, resizing, and CDN streaming |
+| **Multer (v1.4)** | File Middleware | Memory buffer file upload streaming and MIME type filtering |
+| **Nodemailer (v6.9)** | Email Service | SMTP transport service for OTP email activation and recovery |
+| **Google Auth Library (v9.14)**| OAuth2 | Google ID token verification for social sign-in |
+| **Helmet & Express-Rate-Limit**| Hardening | HTTP header protection and brute-force rate limiting |
 
 ---
 
-## ⚙️ Environment Configuration
+## 🗄️ Database Schemas & Data Models
 
-Create a `.env` or use `src/config/.env.dev` with the following variables:
-
-```env
-PORT=3001
-DB_URI="mongodb+srv://<username>:<password>@cluster0.mongodb.net/SocialMediaApp"
-SALT=10
-ENCRYPTION_KEY="socialmediaapplication"
-
-# JWT Signatures
-TOKEN_SIGNATURE="SocialAppUserTokenSignature"
-TOKEN_SIGNATURE_ADMIN="SocialAppAdminTokenSignature"
-EMAIL_TOKEN_SIGNATURE="SocialAppEmailTokenSignature"
-
-USER_ACCESS_TOKEN="SocialAppUserTokenSignature"
-ADMIN_ACCESS_TOKEN="SocialAppAdminTokenSignature"
-USER_REFRESH_TOKEN="SocialAppUserRefreshTokenSignature"
-ADMIN_REFRESH_TOKEN="SocialAppAdminRefreshTokenSignature"
-EXPIRESIN=1800
-
-# Email SMTP
-EMAIL="your-email@gmail.com"
-EMAIL_PASSWORD="your-app-password"
-
-# Frontend Host & Metadata
-FE_URL="http://localhost:5173"
-APP_NAME="Social Media App"
-MOOD="DEV"
-
-# Cloudinary Storage
-cloud_name="your_cloud_name"
-api_key="your_api_key"
-api_secret="your_api_secret"
-```
+| Model | Collection | Primary Attributes | Relationships & Virtuals | Special Mechanics |
+| :--- | :--- | :--- | :--- | :--- |
+| **`User`** | `users` | `name`, `email`, `password`, `role`, `isConfirmed`, `avatar`, `cover` | Virtuals: `posts`, `friends` | Pre-save Bcrypt hashing, OTP generation |
+| **`Story`** | `stories` | `createdBy`, `content`, `media`, `backgroundColor`, `music`, `stickers`, `textPosition`, `expiresAt` | Ref: `createdBy` ➔ `User` | **TTL Index (`expiresAt` = 24h)**, 40s duration |
+| **`StoryView`** | `storyviews` | `storyId`, `userId`, `viewedAt`, `reactions` | Ref: `storyId` ➔ `Story`, Ref: `userId` ➔ `User` | Unique compound index (`storyId` + `userId`) |
+| **`Post`** | `posts` | `content`, `attachments`, `createdBy`, `isFrozen`, `reactions`, `feelings`, `location` | Ref: `createdBy` ➔ `User`, Virtual: `comments` | Soft-delete (`isFrozen`), atomic reaction toggles |
+| **`Comment`** | `comments` | `content`, `postId`, `createdBy`, `commentId`, `isFrozen` | Ref: `postId` ➔ `Post`, Self-Ref: `commentId` ➔ `Comment`, Virtual: `reply` | Nested self-referencing reply tree |
+| **`Conversation`** | `conversations` | `participants`, `lastMessage`, `updatedAt` | Refs: `participants` ➔ `User`, Ref: `lastMessage` ➔ `Message` | Room indexing for instant chat queries |
+| **`Message`** | `messages` | `conversationId`, `sender`, `recipient`, `text`, `media`, `seen` | Refs: `sender`, `recipient` ➔ `User` | Real-time Socket delivery & read receipts |
+| **`Group`** | `groups` | `name`, `description`, `privacy`, `creator`, `avatar` | Ref: `creator` ➔ `User`, Virtual: `members` | Public / Private community management |
+| **`GroupMember`** | `groupmembers` | `groupId`, `userId`, `role` (Admin, Moderator, Member) | Refs: `groupId` ➔ `Group`, `userId` ➔ `User` | Granular group role permissions |
+| **`Event`** | `events` | `title`, `description`, `date`, `location`, `creator` | Ref: `creator` ➔ `User`, Virtual: `attendees` | RSVP attendance scheduling |
+| **`EventAttendee`**| `eventattendees`| `eventId`, `userId`, `status` (Going, Interested) | Refs: `eventId` ➔ `Event`, `userId` ➔ `User` | Compound unique index (`eventId` + `userId`) |
+| **`Notification`** | `notifications` | `recipient`, `sender`, `type`, `title`, `message`, `link`, `isRead` | Refs: `recipient`, `sender` ➔ `User` | Live Socket broadcasts |
+| **`SupportTicket`**| `supporttickets`| `userId`, `subject`, `message`, `priority`, `status`, `replies` | Ref: `userId` ➔ `User`, Virtual: `author` | Helpdesk resolution workflow |
+| **`Report`** | `reports` | `reportedBy`, `targetType` (Post, User, Comment), `targetId`, `reason`, `status` | Ref: `reportedBy` ➔ `User` | Admin moderation queue |
 
 ---
 
-## 🛠️ Local Development Setup
+## 📡 Complete REST API Endpoints Matrix
 
-1. **Install dependencies**:
-   ```bash
-   cd social-backend
-   npm install
-   ```
+### 1. Authentication & Account Access (`/auth`)
+| Method | Endpoint | Description | Payload / Params | Access |
+| :--- | :--- | :--- | :--- | :--- |
+| `POST` | `/auth/signup` | Register new user & dispatch 6-digit OTP email | `{ name, email, password, cPassword }` | Public |
+| `PATCH` | `/auth/confirm-email` | Confirm account activation via OTP | `{ email, code }` | Public |
+| `POST` | `/auth/login` | Authenticate with credentials & receive JWT pair | `{ email, password }` | Public |
+| `POST` | `/auth/google-login` | Authenticate with Google OAuth2 ID Token | `{ idToken }` | Public |
+| `POST` | `/auth/refresh-token` | Rotate expired Access Token using Refresh Token | `{ refreshToken }` | Public |
+| `PATCH` | `/auth/forget-password` | Request password reset code via email | `{ email }` | Public |
+| `PATCH` | `/auth/reset-password` | Reset password using verified code | `{ email, code, newPassword }` | Public |
 
-2. **Start the development server with file watch**:
-   ```bash
-   npm run dev
-   ```
+### 2. User Profiles & Social Graph (`/user`, `/friendship`, `/follow`)
+| Method | Endpoint | Description | Payload / Params | Access |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/user/profile` | Fetch authenticated user's profile | None | Private |
+| `GET` | `/user/search?q=:name` | Search users by name or email | Query: `q` | Private |
+| `PATCH` | `/user/profile` | Update profile information | `{ name, phone, DOB, gender }` | Private |
+| `PATCH` | `/user/profile-image` | Upload profile avatar to Cloudinary | `multipart/form-data` (`file`) | Private |
+| `PATCH` | `/user/cover-image` | Upload cover background to Cloudinary | `multipart/form-data` (`file`) | Private |
+| `PATCH` | `/user/update-password` | Change account password securely | `{ oldPassword, newPassword }` | Private |
+| `PATCH` | `/user/freeze-account` | Soft-delete / deactivate personal account | None | Private |
+| `POST` | `/user/block/:userId` | Block a user from interactions | Param: `userId` | Private |
+| `POST` | `/friendship/request/:id` | Send friend request | Param: `id` | Private |
+| `PATCH` | `/friendship/accept/:id` | Accept incoming friend request | Param: `id` | Private |
+| `DELETE` | `/friendship/:id` | Unfriend or cancel friend request | Param: `id` | Private |
+| `POST` | `/follow/:userId` | Follow a user | Param: `userId` | Private |
+| `DELETE` | `/follow/:userId` | Unfollow a user | Param: `userId` | Private |
 
-3. **Start the production server**:
-   ```bash
-   npm start
-   ```
+### 3. Stories Lifecycle & Stickers (`/story`)
+| Method | Endpoint | Description | Payload / Params | Access |
+| :--- | :--- | :--- | :--- | :--- |
+| `POST` | `/story` | Publish text or media story with music details | `multipart/form-data` (media, music, stickers, textPos) | Private |
+| `GET` | `/story/feed` | Retrieve grouped stories (own + followed users) | None | Private |
+| `POST` | `/story/:storyId/view` | Mark story as viewed with timestamp | Param: `storyId` | Private |
+| `GET` | `/story/:storyId/viewers` | View story viewers list with reactions | Param: `storyId` | Story Owner |
+| `POST` | `/story/:storyId/react` | Send quick emoji reaction (`❤️`, `🔥`, etc.) | `{ emoji: "❤️" }` | Private |
+| `DELETE` | `/story/:storyId` | Permanently delete a story | Param: `storyId` | Story Owner |
 
-4. **Seed initial SuperAdmin**:
-   ```bash
-   npm run create:admin
-   ```
+### 4. Music Library & Audio Trimming (`/music`)
+| Method | Endpoint | Description | Payload / Params | Access |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/music` | List local Egyptian hits & royalty-free tracks | Query: `tab`, `search` | Private |
+| `GET` | `/music/stream/:id` | Stream audio buffer for preview / trimming | Param: `id` | Private |
+
+### 5. Newsfeed Posts & Reactions (`/post`, `/reaction`)
+| Method | Endpoint | Description | Payload / Params | Access |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/post?page=1&limit=10`| Paginated newsfeed with deep-populated comments | Query: `page`, `limit` | Private |
+| `POST` | `/post` | Create post with images/video, feelings & location | `multipart/form-data` (`attachments`, `content`) | Private |
+| `PATCH` | `/post/:postId` | Update post content or attachments | `{ content, removedAttachments }` | Author |
+| `PATCH` | `/post/:postId/freeze` | Soft-delete post | Param: `postId` | Author, Admin |
+| `PATCH` | `/post/:postId/unfreeze`| Restore frozen post | Param: `postId` | Author, Admin |
+| `POST` | `/reaction/:postId` | Add or toggle reaction (Like, Love, Haha...) | `{ emoji: "love" }` | Private |
+| `DELETE` | `/reaction/:postId` | Remove reaction from post | Param: `postId` | Private |
+
+### 6. Threaded Comments & Replies (`/post/:postId/comment`)
+| Method | Endpoint | Description | Payload / Params | Access |
+| :--- | :--- | :--- | :--- | :--- |
+| `POST` | `/post/:postId/comment` | Add top-level comment to post | `{ content }` | Private |
+| `POST` | `/post/:postId/comment/:commentId/reply` | Add nested reply to existing comment | `{ content }` | Private |
+| `PATCH` | `/post/:postId/comment/:commentId` | Update comment or reply content | `{ content }` | Author |
+| `PATCH` | `/post/:postId/comment/:commentId/freeze` | Freeze comment/reply | Author, Post Owner, Admin |
+| `PATCH` | `/post/:postId/comment/:commentId/unfreeze` | Restore frozen comment/reply | Author, Post Owner, Admin |
+
+### 7. Real-Time Chat Messaging (`/chat`)
+| Method | Endpoint | Description | Payload / Params | Access |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/chat/conversations` | Fetch active conversations list with unread counts | None | Private |
+| `GET` | `/chat/messages/:recipientId` | Get message history with a specific user | Query: `page`, `limit` | Private |
+| `POST` | `/chat/messages` | Send message with optional media attachment | `multipart/form-data` (`recipient`, `text`, `file`)| Private |
+| `PATCH` | `/chat/messages/seen/:recipientId` | Mark conversation messages as seen | Param: `recipientId` | Private |
+
+### 8. Communities & Groups (`/group`)
+| Method | Endpoint | Description | Payload / Params | Access |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/group` | List discoverable groups | Query: `search` | Private |
+| `POST` | `/group` | Create new community group | `{ name, description, privacy }` | Private |
+| `GET` | `/group/:groupId` | Get group details, feeds & member list | Param: `groupId` | Group Members |
+| `POST` | `/group/:groupId/join` | Request to join or join public group | Param: `groupId` | Private |
+| `PATCH` | `/group/:groupId/request/:requestId` | Approve or reject join request | `{ action: "accept" / "reject" }` | Group Admin |
+
+### 9. Scheduled Events (`/event`)
+| Method | Endpoint | Description | Payload / Params | Access |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/event` | List upcoming events | Query: `filter` | Private |
+| `POST` | `/event` | Create new scheduled event | `{ title, description, date, location }` | Private |
+| `POST` | `/event/:eventId/rsvp` | Submit RSVP attendance | `{ status: "going" / "interested" }` | Private |
+
+### 10. Help Desk & Support Tickets (`/support`)
+| Method | Endpoint | Description | Payload / Params | Access |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/support/tickets` | List user's submitted support tickets | None | Private |
+| `POST` | `/support/tickets` | Open new support ticket | `{ subject, message, priority }` | Private |
+| `POST` | `/support/tickets/:ticketId/reply` | Reply to support ticket thread | `{ message }` | Ticket Owner, Admin |
+
+### 11. SuperAdmin Portal & Moderation (`/admin`)
+| Method | Endpoint | Description | Payload / Params | Access |
+| :--- | :--- | :--- | :--- | :--- |
+| `GET` | `/admin/stats` | Platform analytics (total users, posts, stories, tickets) | None | Admin Only |
+| `GET` | `/admin/users` | Paginated user management table | Query: `page`, `role`, `status` | Admin Only |
+| `PATCH` | `/admin/users/:userId/role`| Elevate or demote user role (`Admin` / `User`) | `{ role: "Admin" }` | Admin Only |
+| `PATCH` | `/admin/users/:userId/ban` | Ban or unban user account | `{ isBanned: true }` | Admin Only |
+| `GET` | `/admin/reports` | Moderation queue of reported content | Query: `status` | Admin Only |
+| `PATCH` | `/admin/reports/:reportId` | Resolve report & take action (delete content, warn user) | `{ action: "resolve" }` | Admin Only |
 
 ---
 
-## 🚀 Deployment (Vercel / Cloud Platforms)
+## ⚡ Socket.IO Real-Time Event Architecture
 
-The repository includes a ready-to-use [`vercel.json`](./vercel.json) configured with the `@vercel/node` builder:
+| Event Name | Direction | Emitter / Receiver | Payload | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| `connection` | Client ➔ Server | Socket Client | Handshake Auth: `{ token }` | Authenticates socket & joins user room `user:<userId>` |
+| `sendMessage` | Client ➔ Server | Sender Client | `{ recipientId, text, media }` | Dispatches real-time message to recipient |
+| `newMessage` | Server ➔ Client | Receiver Socket | `{ message, conversationId }` | Delivers incoming message bubble instantly |
+| `typing` | Client ➔ Server | Sender Client | `{ conversationId, isTyping: true }` | Broadcasts typing indicator to partner |
+| `userTyping` | Server ➔ Client | Receiver Socket | `{ userId, conversationId }` | Displays "Typing..." in chat window |
+| `newNotification` | Server ➔ Client | Receiver Socket | `{ notification }` | Increments notification badge & displays toast |
+| `storyReaction`| Server ➔ Client | Story Creator | `{ storyId, emoji, user }` | Live toast reaction alert on active story |
+
+---
+
+## ⚙️ Environment Variables Reference
+
+| Variable | Type | Example / Default | Required | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| `PORT` | Number | `3001` | Yes | HTTP & WebSocket server port |
+| `DB_URI` | String | `mongodb+srv://...` | Yes | MongoDB Atlas connection string |
+| `SALT` | Number | `10` | Yes | Bcrypt password hashing cost factor |
+| `ENCRYPTION_KEY` | String | `socialmediaapplication` | Yes | AES symmetric token payload encryption key |
+| `USER_ACCESS_TOKEN` | String | `SocialAppUserSecret` | Yes | JWT Access Token signing key |
+| `USER_REFRESH_TOKEN`| String | `SocialAppRefreshSecret` | Yes | JWT Refresh Token signing key |
+| `EXPIRESIN` | Number | `1800` (30 min) | Yes | Access token lifespan in seconds |
+| `EMAIL` | String | `admin@gmail.com` | Yes | SMTP Nodemailer account email |
+| `EMAIL_PASSWORD` | String | `app-specific-password` | Yes | SMTP app password for OTP delivery |
+| `FE_URL` | String | `http://localhost:5173` | Yes | Allowed CORS origin & client URL |
+| `cloud_name` | String | `qxyupdvj` | Yes | Cloudinary CDN cloud identifier |
+| `api_key` | String | `462267984881375` | Yes | Cloudinary API access key |
+| `api_secret` | String | `qrLrYCKbwdFvsk7...` | Yes | Cloudinary API access secret |
+
+---
+
+## 🚀 Deployment & Vercel Configuration
+
+The backend is configured with [`vercel.json`](./vercel.json) using the `@vercel/node` builder:
 
 ```json
 {
@@ -234,5 +219,10 @@ The repository includes a ready-to-use [`vercel.json`](./vercel.json) configured
 }
 ```
 
-- When deploying to **Vercel**, import the `social-backend` repository and set the environment variables in the Vercel Project Settings.
-- For persistent real-time WebSockets (Socket.IO), platforms like **Render**, **Railway**, or **VPS** will keep persistent connections active via `server.listen(process.env.PORT)`.
+### Deployment Step-by-Step Matrix:
+| Step | Action | Platform | Command / Details |
+| :---: | :--- | :--- | :--- |
+| **1** | Import Repository | Vercel Dashboard | Select `AlbashengineerAhmed/social-backend` |
+| **2** | Environment Variables | Vercel Project Settings | Add all variables from `.env.example` (`DB_URI`, `JWT`, `Cloudinary`) |
+| **3** | Deploy | Vercel CLI / Web | Click **Deploy** ➔ Generates live serverless API URL |
+| **4** | Real-time WebSockets (Optional) | Render / Railway | Deploy alongside for persistent 24/7 Socket.IO connections |
