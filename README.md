@@ -1,12 +1,3 @@
-# SocialApp — Enterprise Social Media Backend API
-
-> **Course:** Node.js Backend Route — Cycle 43 (Weeks 12 to 14: Social App)  
-> **Instructor:** Eng. Mahmoud Elwan  
-> **Architecture:** Clean Layered Architecture (Controller -> Service -> DB Service)  
-> **Module Format:** ECMAScript Modules (`"type": "module"`)
-
----
-
 ## 📖 Overview
 
 **SocialApp** is a scalable, enterprise-grade RESTful API built with **Node.js**, **Express.js**, and **MongoDB (Mongoose)**. The application implements core social networking capabilities including secure user authentication (email OTP verification and Google OAuth2), user profile management, paginated posts with Cloudinary multi-asset uploads, threaded comments and replies, atomic post likes, and soft-delete/restore mechanics.
