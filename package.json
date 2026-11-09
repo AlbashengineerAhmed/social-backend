@@ -11,7 +11,8 @@
     "dev": "node --watch index.js",
     "start": "node index.js",
     "create:admin": "node src/scripts/createAdmin.js",
-    "add:admin": "node src/scripts/createAdmin.js"
+    "add:admin": "node src/scripts/createAdmin.js",
+    "seed:fullstack": "node src/scripts/seedFullStackData.js"
   },
   "keywords": [],
   "author": "",
